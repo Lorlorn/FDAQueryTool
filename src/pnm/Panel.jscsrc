@@ -1,0 +1,25 @@
+{ "Panel": 
+    {
+        "": "",
+        "AN": "Anesthesiology",
+        "HO": "General Hospital",
+        "EN": "Ear Nose & Throat",
+        "SU": "General & Plastic Surgery",
+        "IM": "Immunology",
+        "OP": "Ophthalmic",
+        "RA": "Radiology",
+        "CV": "Cardiovascular",
+        "GU": "Gastroenterology/Urology",
+        "MI": "Microbiology",
+        "OR": "Orthopedic",
+        "CH": "Clinical Chemistry",
+        "NE": "Neurology",
+        "PA": "Pathology",
+        "TX": "Toxicology",
+        "DE": "Dental",
+        "HE": "Hematology",
+        "OB": "Obstetrics/Gynecology",
+        "PM": "Physical Medicine",
+        "MG": "Molecular Genetic"
+    }
+}

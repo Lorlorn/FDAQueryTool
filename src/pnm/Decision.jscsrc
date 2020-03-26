@@ -1,0 +1,15 @@
+{ "Decision": 
+    {
+        "": "",
+        "SESP": "SE - POSTMARKET SURVEILLANCE REQUIRED (SESP)",
+        "SESU": "SE - WITH LIMITATIONS (SESU)",
+        "ST": "SE SUBJECT TO TRACKING REG (ST)",
+        "PT": "SE SUBJECT TO TRAKING & PMS (PT)",
+        "SESE": "SUBST EQUIV (SESE)",
+        "SESK": "SUBST EQUIV - KIT (SESK)",
+        "SEKD": "SUBST EQUIV - KIT WITH DRUGS (SEKD)",
+        "SI": "SUBST EQUIV - MARKET AFTER INSPECTION (SI)",
+        "SESD": "SUBST EQUIV - WITH DRUG (SESD)",
+        "SN": "SUBST EQUIV FOR SOME INDICATIONS (SN)"
+    }
+}

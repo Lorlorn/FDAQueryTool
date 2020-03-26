@@ -1,0 +1,13 @@
+{
+    "SortColumn":
+    {
+        "dd_desc": "Decision Date (descending)",
+        "dd_asc": "Decision Date (ascending) ",
+        "dn_asc": "Device Name (A-Z)",
+        "dn_desc": "Device Name (Z-A)",
+        "an_asc": "Applicant Name (A-Z)",
+        "an_desc": "Applicant Name (Z-A)",
+        "kn_desc": "510(k) Number (descending)",
+        "kn_asc": "510(k) Number (ascending)"        
+    }
+}
