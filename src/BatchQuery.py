@@ -74,12 +74,12 @@ class APIAdaptor:
 
     class Sort:
         sort_fields = {'1':'report_date'} # unfinished
-        sort_type = {'1': 'desc', '2': 'asc'}
+        sort_types = {'1': 'desc', '2': 'asc'}
         def __init__(self):
             self._sort_method = None
         
-        def _set_sort_method(self, sort_field, sort_type):
-            self._sort_method = self.sort_fields[sort_field] + ':' + sort_type[sort_type]
+        def set_sort_method(self, sort_field, sort_type):
+            self._sort_method = self.sort_fields[sort_field] + ':' + self.sort_types[sort_type]
         
         def return_sort(self):
             if (self._sort_method is not None):
@@ -87,8 +87,6 @@ class APIAdaptor:
             
             else:
                 APIAdaptor.warning_msg(2)            
-
-
 
     def api_syntax(self):
         # defining core api combination syntax
