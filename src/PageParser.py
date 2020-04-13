@@ -4,14 +4,11 @@ example source: https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm
 
 '''
 
-import urllib.request
 import requests
 from bs4 import BeautifulSoup as bs
 import re
 
 #### Params
-url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
-
 keys = tuple([
     "Device Classification Name",
     "510(K) Number",
@@ -23,7 +20,7 @@ keys = tuple([
     "Regulation Number",
     "Classification Product Code",
     "Date Received",
-    "Decision Date",
+    "Decision Date", 
     "Decision",
     "Regulation Medical Specialty",
     "510k Review Panel",
@@ -33,6 +30,7 @@ keys = tuple([
     "Combination Product"
     ])
 
+url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
 r = requests.get(url)
 
 # Check Status
@@ -52,78 +50,91 @@ table = soup.find('table', {'align': 'center'})
 keys = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
 keys_2 = [th.text.replace('\n', '') for th in table.find('tr').find_all('th', {'align': 'left'} )]
 
-# trs = table.find_all('tr')[1:]
-# main_table = trs[3].find_all('tr')
+class PageParser:
+    FDA_510K_CENTRAL_POSI = 3
 
-# content = dict() 
-# l_col = list()
-# r_col = list()
-# links = list()
+    def __init__(self, url):
+        self.url = url
+        self.status = {'get_url':False, 'retrieve_central_content': False, 'retrieve_elements_dict':False}
+        self.get_url_data = None
+        self.central_table = None
+        self.central_table_keys = []
+        self.element_dict = {}
+    
+    def get_url(self):
+        # intialize status
+        self.status = {x : None for x in self.status}
 
-# last_key = ''
-# last_val = ''
+        # get url
+        try:
+            self.get_url_data = requests.get(self.url)
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(e)
 
-# for tr in main_table:
-#     curr_key = ' '.join([re.sub('[\n\t\r\xa0]', '', th.text) for th in tr.find_all('th', {'align': 'left'})])
-#     curr_val = ' '.join([re.sub('[\n\t\r\xa0]', '', td.text) for td in tr.find_all('td', {'align': 'left'}, recursive = False)])
-#     link = [l.get('href') for l in tr.find('td').find_all('a', href = True)]
+        # check in status
+        self.status['get_url'] = True
+        
+        return None
 
-#     if len(link) != 0:
-#         links.append(link)
-#         l_str = ' | '.join(link)
-#         curr_val += (' | ' + (l_str))
+    def retrieve_central_table(self):
+        # parse url get data
+        soup = bs(self.get_url_data.text, 'lxml')
 
-#     if (curr_key == ''):
-#         continue
+        # retrieve central table content
+        table = soup.find('table', {'align': 'center'})
+        self.central_table_keys = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
+        trs = table.find_all('tr')[1:]
+        self.central_table = trs[PageParser.FDA_510K_CENTRAL_POSI].find_all('tr')
 
-#     else:       
-#         l_col.append(curr_key)
-#         r_col.append(curr_val)
+        # check in status
+        self.status['retrieve_central_content'] = True
 
-# for i in range(len(l_col)):
-#     print(l_col[i], ' : ', r_col[i])
+    def retrieve_element_dict(self):
+        # parse element into dict
+        l_col = list()
+        r_col = list()
+        links = list()
+
+        for tr in self.central_table:
+            curr_key = ' '.join([re.sub('[\n\t\r\xa0]', '', th.text) for th in tr.find_all('th', {'align': 'left'})])
+            curr_val = ' '.join([re.sub('[\n\t\r\xa0]', '', td.text) for td in tr.find_all('td', {'align': 'left'}, recursive = False)])
+            link = [l.get('href') for l in tr.find('td').find_all('a', href = True)]
+            
+            if len(link) != 0:
+                links.append(link)
+                l_str = ' | '.join(link)
+                curr_val += (' | ' + (l_str))
+
+            if (curr_key == ''):
+                continue
+
+            else:       
+                l_col.append(curr_key)
+                r_col.append(curr_val.lstrip())
+                self.element_dict[curr_key] = curr_val.lstrip()
+
+        # check in status
+        self.status['retrieve_elements_dict'] = True
+        return None
+    
+    def run(self):
+        self.get_url()
+        self.retrieve_central_table()
+        self.retrieve_element_dict()
+    
+    def return_dict(self):
+        return self.element_dict
+
 
 if __name__ == "__main__":
-    url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
+    # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
     # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K091000'
-    # Download from url
-    r = requests.get(url)
+    url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K181373'
 
-    # Parse with BeautifulSoup
-    soup = bs(r.text, 'lxml')
+    print('*'* 100)
 
-    # Retrieve Central Table Content
-    table = soup.find('table', {'align': 'center'})
-    keys = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
+    p = PageParser(url)
+    p.run()
 
-    # Temp Try
-    trs = table.find_all('tr')[1:]
-    main_table = trs[3].find_all('tr')
-
-    content = dict() 
-    l_col = list()
-    r_col = list()
-    links = list()
-
-    last_key = ''
-    last_val = ''
-
-    for tr in main_table:
-        curr_key = ' '.join([re.sub('[\n\t\r\xa0]', '', th.text) for th in tr.find_all('th', {'align': 'left'})])
-        curr_val = ' '.join([re.sub('[\n\t\r\xa0]', '', td.text) for td in tr.find_all('td', {'align': 'left'}, recursive = False)])
-        link = [l.get('href') for l in tr.find('td').find_all('a', href = True)]
-
-        if len(link) != 0:
-            links.append(link)
-            l_str = ' | '.join(link)
-            curr_val += (' | ' + (l_str))
-
-        if (curr_key == ''):
-            continue
-
-        else:       
-            l_col.append(curr_key)
-            r_col.append(curr_val)
-
-    for i in range(len(l_col)):
-        print(l_col[i], ' : ', r_col[i])
+    for k, v in p.element_dict.items():
+        print(k, ': ', v)
