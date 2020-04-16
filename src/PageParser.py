@@ -30,26 +30,6 @@ keys = tuple([
     "Combination Product"
     ])
 
-url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
-r = requests.get(url)
-
-# Check Status
-r.status_code
-
-# Check encoding
-r.encoding
-
-# Check content
-text = r.text
-
-# Parse with BeautifulSoup
-soup = bs(text, 'lxml')
-
-# Retrieve Central Table Content
-table = soup.find('table', {'align': 'center'})
-keys = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
-keys_2 = [th.text.replace('\n', '') for th in table.find('tr').find_all('th', {'align': 'left'} )]
-
 class PageParser:
     FDA_510K_CENTRAL_POSI = 3
 
