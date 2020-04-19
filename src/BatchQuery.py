@@ -95,6 +95,7 @@ class APIAdaptor:
             if (not self._searched):
                 self._search_query = str(field) + ':' + tm_term
                 self._searched = True
+            
             else:
                 self._search_query += self.SEP_SEARCH_ATTACH_AND + str(field) + ':' + tm_term
 
@@ -102,8 +103,10 @@ class APIAdaptor:
             if (not self._searched):
                 APIAdaptor.warning_msg(0)
                 return
+            
             elif (self._search_time_range is not ''):
                 return self._search_query + self.SEP_SEARCH_ATTACH_AND + self._search_time_range
+            
             else:
                 return self._search_query
 
@@ -111,19 +114,22 @@ class APIAdaptor:
             return self.SEP_SEARCH_INIT + self._search_query
 
     class Limit:
+        LIMIT_DEFAULT_NUM = 20
+        LIMIT_MAX = 100
         def __init__(self):
             self._limit_num = None
         
-        def set_limit_num(self, num = 20):
-            if (num > 100):
+        def set_limit_num(self, num = LIMIT_DEFAULT_NUM):
+            if (num > self.LIMIT_MAX):
                 print('Limited query number is 100')
-                num = 100
+                num = self.LIMIT_MAX
             self._limit_num = num
             return self
         
         def return_final(self):
             if (self._limit_num is not None):
                 return 'limit=' + str(self._limit_num)
+            
             else:
                 APIAdaptor.warning_msg(1)
 
@@ -138,7 +144,6 @@ class APIAdaptor:
         def return_final(self):
             if (self._sort_method is not None):
                 return 'sort='+ self._sort_method
-            
             else:
                 APIAdaptor.warning_msg(2)
 
@@ -167,7 +172,8 @@ class APIforDevice(APIAdaptor):
             self._query_dict['device_name'] = self.Search()
             self._query_dict['device_name'].add_search('device_name', name_key)          
         else:
-            self._query_dict['device_name'].add_search('device_name', name_key)          
+            self._query_dict['device_name'].add_search('device_name', name_key)    
+        return self      
     
     def add_search_decision_date_range(self, from_ = None, to_ = None):
         if not ('device_name' in self._query_dict):
@@ -175,13 +181,15 @@ class APIforDevice(APIAdaptor):
             self._query_dict['device_name'].add_time('decision_date', from_, to_)          
         else:
             self._query_dict['device_name'].add_time('decision_date', from_, to_)    
+        return self
 
-    def add_limit(self, num = 10):
+    def add_limit(self, num = 20):
         if not ('limit' in self._query_dict):
             self._query_dict['limit'] = self.Limit()
             self._query_dict['limit'].set_limit_num(num)
         else:
             self._query_dict['limit'].set_limit_num(num)
+        return self
 
     def add_sort_by_decision_date(self, sort_type = 1):
         if not ('sort' in self._query_dict):
@@ -189,6 +197,23 @@ class APIforDevice(APIAdaptor):
             self._query_dict['sort'].set_sort_method('decision_date', sort_type)
         else:
             self._query_dict['sort'].set_sort_method('decision_date', sort_type)
+        return self
+
+    def add_queris(self, search_dv_name_key = '', 
+                         search_date_f = None, search_date_t = None, 
+                         limit_num = None, 
+                         sort_type = None):
+        
+        self.add_search_device_name(search_dv_name_key).add_search_decision_date_range(search_date_f, search_date_t)
+        num = limit_num
+        st = sort_type
+        if (limit_num is None):
+            num = self.Limit.LIMIT_DEFAULT_NUM
+        
+        if (sort_type is None):
+            st = 1
+
+        self.add_limit(num).add_sort_by_decision_date(st)
 
     def check_device_search(self):
         print('Current Search: ', self._query_dict['device_name'].return_final())
@@ -197,13 +222,28 @@ class APIforDevice(APIAdaptor):
         for k, v in self._query_dict.items():
             print(k, ':\t', v.return_final())
     
-    def return_final_query(self):
+    def return_final_query(self, show = False):
         curr_str = ''
         for _, v in self._query_dict.items():
             curr_str += (v.return_final() + self.API_SYNTAX_KEYS['and'])
+        
         self._final_query += curr_str[:-1]
-        print('Final query: ', self._final_query)
+        if show:
+            print('Final Query: ', self._final_query)
         return self._final_query
+
+# #### 510(K) Query Masster
+# class DeviceQuery(APIforDevice):
+#     QUERY_DICT = {'search_dv_name_key': '', 'search_date_f': None, 'search_date_t': None, 'limit_num': None, 'sort_type': None}
+
+#     def __init__(self):
+#         self._final_query = ''
+#         self._connect_status = None
+#         self._content = None    
+    
+#     def set_query(self,  **kwargs):
+#         print(kwargs)
+#         pass
 
 
 #### Unit Test Script
@@ -225,14 +265,13 @@ if __name__ == '__main__':
     
     if TEST_CLASS:
         print('ROOT is ', APIforDevice.API_ROOT)
+
+        #### 
         test = APIforDevice()
-        test.add_search_device_name('ecg')
-        test.add_search_decision_date_range('19900425', None)
+        test.add_search_device_name('ecg').add_search_decision_date_range('19900425', None).add_limit(20).add_sort_by_decision_date()
+        s1 = test.return_final_query()
 
-        test.check_device_search()
-        test.add_limit()
-        test.add_limit(10)
-        test.add_sort_by_decision_date()
-        test.check_all_queries()
-
-        test.return_final_query()
+        test_2 = APIforDevice()
+        test_2.add_queris(search_date_f = '19900425', search_date_t = None, limit_num = None, sort_type = None)
+        s2 = test_2.return_final_query()
+        print(s1 == s2)
