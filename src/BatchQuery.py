@@ -30,10 +30,9 @@ class SingleTime:
 
 class TimeRange:
     INIT_DATE = '19700101'
-    CURR_DATE = None
-    def __init__(self, from_:str = INIT_DATE, to_:str = CURR_DATE):
-        self._time_attach = '+TO+'
-        
+    CURR_DATE = datetime.date.today().strftime('%Y%m%d')
+    SEP_TIME_ATTACH = '+TO+'
+    def __init__(self, from_:str = INIT_DATE, to_:str = CURR_DATE):        
         # Time formation
         str_f = SingleTime(from_).date
         str_t = SingleTime(to_).date
@@ -43,7 +42,7 @@ class TimeRange:
             
         self._f = str_f if (str_f < str_t) else str_t
         self._t = str_t if (str_f < str_t) else str_f
-        self.range = '[{}{}{}]'.format(self._f, self._time_attach, self._t)
+        self.range = '[{}{}{}]'.format(self._f, self.SEP_TIME_ATTACH, self._t)
 
 #### Parent Class
 class APIAdaptor:

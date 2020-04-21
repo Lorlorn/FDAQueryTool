@@ -13,9 +13,6 @@ from datetime import date
 from src import PageParser
 from src import BatchQuery
 
-
-# print('*'*45 + '\n\t\tMain Proccess.\n' + '*'*45)
-
 #### Argument Parser
 parser = argparse.ArgumentParser()
 parser.add_argument('-sr_key', type = str, help = '[Search] key for device name', default = '')
@@ -44,14 +41,22 @@ print('API Query:\t', root_url)
 #### Requesting From FDA Database
 ## query
 print('*'*45 + '\n\t\tRequest From Database\n' + '*'*45)
+
 data = requests.get(root_url)
 print('Connection Success:\t{}'.format(data.status_code == 200))
 
 ## read to json & output
 json_data = json.loads(data.text)
+
+if (data.status_code != 200):
+    print('Error: ', json_data['error']['message'])
+    exit('You suck at searching. \nBye bro.')
+
+print('Return Files / Total:\t {} / {}'.format(json_data['meta']['results']['limit'], json_data['meta']['results']['total']))
+
+# to data
 df = pd.DataFrame(json_data['results'])
 k_num_list = df['k_number'].to_list()
-print('Return Files / Total:\t {} / {}'.format(json_data['meta']['results']['limit'], json_data['meta']['results']['total']))
 
 # save database results?
 save = input('Save database query results into CSV? (Y/N): ')
@@ -75,7 +80,8 @@ if (proceed is 'N') or (proceed is 'n'):
 # parsing
 print('Parsing...')
 root_url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID={}'
-urls = [root_url.format(s) for s in k_num_list] 
+denovo_url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/denovo.cfm?ID={}'
+urls = [root_url.format(s) if s[0] == 'K' else denovo_url.format(s) for s in k_num_list] 
 
 dict_list = []
 
