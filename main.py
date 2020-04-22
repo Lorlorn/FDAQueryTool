@@ -16,6 +16,8 @@ from src import BatchQuery
 #### Argument Parser
 parser = argparse.ArgumentParser()
 parser.add_argument('-sr_key', type = str, help = '[Search] key for device name', default = '')
+parser.add_argument('-sr_pd_code', type = str, help = '[Search] key for specific product code', default = None)
+parser.add_argument('-sr_rgl_num', type = str, help = '[Search] key for regulation number', default = None)
 parser.add_argument('-sr_time_f', type = str, help = '[Search] decision time from, should be YYYYMMDD', default = None)
 parser.add_argument('-sr_time_t', type = str, help = '[Search] decision time to, should be YYYYMMDD', default = None)
 parser.add_argument('-l_num', type = int, help = '[Limit] number of reports to be shown, range [1, 100]', default = 20)
@@ -24,6 +26,8 @@ args = parser.parse_args()
 
 print('*'*45 + '\n\t\tInput Arguments\n' + '*'*45)
 print('Search Key:\t', args.sr_key)
+print('Search Product Code:\t', args.sr_pd_code)
+print('Search Regulation Number:\t', args.sr_rgl_num)
 print('Search Time (From):\t', args.sr_time_f)
 print('Search Time (To):\t', args.sr_time_t)
 print('Search Number:\t', args.l_num)
@@ -32,6 +36,8 @@ print('Sort Type:\t', args.srt_type)
 #### Batch Query
 test = BatchQuery.APIforDevice()
 test.add_queris(search_dv_name_key = args.sr_key,
+                search_product_code_key = args.sr_pd_code, search_product_code_match = True,
+                search_regulation_num_key = args.sr_rgl_num, search_regulation_num_match = True,
                 search_date_f = args.sr_time_f, search_date_t = args.sr_time_t, 
                 limit_num =  args.l_num, 
                 sort_type = args.srt_type)

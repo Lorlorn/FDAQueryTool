@@ -160,26 +160,43 @@ class APIAdaptor:
 ## 510K APIAdaptor
 class APIforDevice(APIAdaptor):
     API_ROOT = APIAdaptor.API_ROOT + 'device/510k' + APIAdaptor.API_SYNTAX_KEYS['end_point_end']
-    API_SEARCH_FIELDS = {'regulation_number', 'fei_number', 'device_name', 'device_class', 'medical_specialty_description', 'registration_number', 'k_number'}
+    API_SEARCH_FIELDS = {'openfda.regulation_number', 'fei_number', 'device_name', 'device_class', 'product_code', 'medical_specialty_description', 'registration_number', 'k_number'}
 
     def __init__(self):
         self._final_query = self.API_ROOT
         self._query_dict = {}
 
     def add_search_device_name(self, name_key:str):
-        if not ('device_name' in self._query_dict):
-            self._query_dict['device_name'] = self.Search()
-            self._query_dict['device_name'].add_search('device_name', name_key)          
+        if not ('search' in self._query_dict):
+            self._query_dict['search'] = self.Search()
+            self._query_dict['search'].add_search('device_name', name_key)          
         else:
-            self._query_dict['device_name'].add_search('device_name', name_key)    
+            self._query_dict['search'].add_search('device_name', name_key)    
         return self      
     
-    def add_search_decision_date_range(self, from_ = None, to_ = None):
-        if not ('device_name' in self._query_dict):
-            self._query_dict['device_name'] = self.Search()
-            self._query_dict['device_name'].add_time('decision_date', from_, to_)          
+    def add_search_product_code(self, product_code_key:str, match:bool = True):
+        if not ('search' in self._query_dict):
+            self._query_dict['search'] = self.Search()
+            self._query_dict['search'].add_search('product_code', product_code_key)          
         else:
-            self._query_dict['device_name'].add_time('decision_date', from_, to_)    
+            self._query_dict['search'].add_search('product_code', product_code_key, match)
+        return self      
+
+    def add_search_regulation_number(self, regulation_number_key:str, match:bool = True):
+        if not ('search' in self._query_dict):
+            self._query_dict['search'] = self.Search()
+            self._query_dict['search'].add_search('openfda.regulation_number', regulation_number_key)          
+        else:
+            self._query_dict['search'].add_search('openfda.regulation_number', regulation_number_key, match)
+        return self      
+
+
+    def add_search_decision_date_range(self, from_ = None, to_ = None):
+        if not ('search' in self._query_dict):
+            self._query_dict['search'] = self.Search()
+            self._query_dict['search'].add_time('decision_date', from_, to_)          
+        else:
+            self._query_dict['search'].add_time('decision_date', from_, to_)    
         return self
 
     def add_limit(self, num = 20):
@@ -198,12 +215,22 @@ class APIforDevice(APIAdaptor):
             self._query_dict['sort'].set_sort_method('decision_date', sort_type)
         return self
 
-    def add_queris(self, search_dv_name_key = '', 
-                         search_date_f = None, search_date_t = None, 
-                         limit_num = None, 
-                         sort_type = None):
+    def add_queris(self, search_dv_name_key:str = '', 
+                         search_product_code_key:str = None,
+                         search_product_code_match:bool = True,
+                         search_regulation_num_key:str = None,
+                         search_regulation_num_match:bool = True,
+                         search_date_f:str = None, search_date_t:str = None,
+                         limit_num:int = None, 
+                         sort_type:int = None):
         
         self.add_search_device_name(search_dv_name_key).add_search_decision_date_range(search_date_f, search_date_t)
+        if (search_product_code_key != None):
+            self.add_search_product_code(search_product_code_key, search_product_code_match)
+
+        if (search_regulation_num_key != None):
+            self.add_search_regulation_number(search_regulation_num_key, search_regulation_num_match)
+
         num = limit_num
         st = sort_type
         if (limit_num is None):
@@ -267,10 +294,14 @@ if __name__ == '__main__':
 
         #### 
         test = APIforDevice()
-        test.add_search_device_name('ecg').add_search_decision_date_range('19900425', None).add_limit(20).add_sort_by_decision_date()
+        test.add_search_device_name('ecg').add_search_decision_date_range('19900425', None).add_limit(20).add_sort_by_decision_date().add_search_product_code('MHX', False).add_search_regulation_number('870.1025', False)
         s1 = test.return_final_query()
+        print('S1 is ', s1)
 
         test_2 = APIforDevice()
-        test_2.add_queris(search_date_f = '19900425', search_date_t = None, limit_num = None, sort_type = None)
+        test_2.add_queris(search_dv_name_key = 'ecg', 
+                          search_product_code_key = 'MHX', search_product_code_match = False,
+                          search_regulation_num_key = '870.1025', search_regulation_num_match = False, search_date_f = '19900425', search_date_t = None, limit_num = 20, sort_type = None)
         s2 = test_2.return_final_query()
+        print('S2 is ', s2)
         print(s1 == s2)
