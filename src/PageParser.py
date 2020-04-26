@@ -40,6 +40,7 @@ class PageParser:
         self.central_table = None
         self.central_table_keys = []
         self.element_dict = {}
+        self.links = {}
     
     def get_url(self):
         # intialize status
@@ -73,7 +74,6 @@ class PageParser:
         # parse element into dict
         l_col = list()
         r_col = list()
-        links = list()
 
         for tr in self.central_table:
             curr_key = ' '.join([re.sub('[\n\t\r\xa0]', '', th.text) for th in tr.find_all('th', {'align': 'left'})])
@@ -81,7 +81,7 @@ class PageParser:
             link = [l.get('href') for l in tr.find('td').find_all('a', href = True)]
             
             if len(link) != 0:
-                links.append(link)
+                self.links[curr_key] = link
                 l_str = ' | '.join(link)
                 curr_val += (' | ' + (l_str))
 
@@ -105,12 +105,37 @@ class PageParser:
     def return_dict(self):
         return self.element_dict
 
+    def return_links(self):
+        return self.links
+
+
+#### PDF Parser
+import PyPDF2
+import io
+
+class SummaryPDFReader:
+    def __init__(self):
+        self.reader = None
+    
+    def read_from_url(self, url:str):
+        r = requests.get(url)
+        f = io.BytesIO(r.content)
+        self.reader = PyPDF2.PdfFileReader(f)
+        del f
+
+    def key_exist(self, key:str)->bool:
+        for i in range(self.reader.getNumPages()):
+            page_text = ''.join(self.reader.getPage(i).extractText())
+            if key.lower() in page_text.lower():
+                return True
+        return False
+
 
 if __name__ == "__main__":
     # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
-    # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K091000'
+    url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K091000'
     # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K181373'
-    url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/denovo.cfm?ID=DEN180044'
+    # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/denovo.cfm?ID=DEN180044'
 
     print('*'* 100)
 
@@ -119,3 +144,5 @@ if __name__ == "__main__":
 
     for k, v in p.element_dict.items():
         print(k, ': ', v)
+    
+    print('Links: ', p.return_links())
