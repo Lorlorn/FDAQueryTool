@@ -8,7 +8,7 @@ sys.path.insert(1, os.path.sep + 'src')
 import argparse
 import json
 import requests
-import pandas as pd
+from pandas import DataFrame
 from datetime import date
 from src import PageParser
 from src import BatchQuery
@@ -67,7 +67,7 @@ if (data.status_code != 200):
 print('Return Files / Total:\t {} / {}'.format(json_data['meta']['results']['limit'], json_data['meta']['results']['total']))
 
 # to data
-df = pd.DataFrame(json_data['results'])
+df = DataFrame(json_data['results'])
 k_num_list = df['k_number'].to_list()
 
 # save database results?
@@ -105,7 +105,7 @@ for u in urls:
 
 # save?
 save = input('Save parsed results into CSV? (Y/N): ')
-df = pd.DataFrame(dict_list)
+df = DataFrame(dict_list)
 
 if (save is 'Y') or (save is 'y'):
     file_name = '{}-{}-[{} to {}]-parsed.csv'.format(date.today().strftime('%Y%m%d'), args.sr_key, args.sr_time_f, args.sr_time_t)

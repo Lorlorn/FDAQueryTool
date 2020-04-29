@@ -37,7 +37,7 @@ class ReportPDFReader:
                 return True
         return False
 
-    def save_from_pdf(self, file_name:str):
+    def _save_from_pdf(self, file_name:str):
         writer = PyPDF2.PdfFileWriter()
         writer.appendPagesFromReader(self.reader)
 
@@ -45,7 +45,7 @@ class ReportPDFReader:
             writer.write(f)
             f.close()
     
-    def save_from_link(self, file_name:str):
+    def _save_from_link(self, file_name:str):
         r = requests.get(self._file_path, allow_redirects = True)
         
         with open(file_name, 'wb') as f:
@@ -59,16 +59,15 @@ class ReportPDFReader:
         out_file = (dest + os.path.sep + self._file_name)
 
         if (self.reader != None):
-            self.save_from_pdf(out_file)
+            self._save_from_pdf(out_file)
             return True
         
         elif (self._file_path != None):
-            self.save_from_link(out_file)
+            self._save_from_link(out_file)
             return True
         else:
             print('No PDF file can be saved.')
             return False
-
 
 if __name__ == '__main__':
     url = 'https://www.accessdata.fda.gov/cdrh_docs/pdf19/K191323.pdf'
