@@ -18,11 +18,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-sr_key', type = str, help = '[Search] key for device name', default = '')
 parser.add_argument('-sr_pd_code', type = str, help = '[Search] key for specific product code', default = None)
 parser.add_argument('--sr_pd_code_OR', help = '[Search] product code with OR', default = False, dest = 'bool_pd_code_or', action = 'store_true')
-parser.add_argument('--no-sr_pd_code_OR', dest = 'bool_pd_code_or', action = 'store_false')
+parser.add_argument('--no-sr_pd_code_OR', help = '[Search] product code with AND', dest = 'bool_pd_code_or', action = 'store_false')
 
 parser.add_argument('-sr_rgl_num', type = str, help = '[Search] key for regulation number', default = None)
 parser.add_argument('--sr_rgl_num_OR', help = '[Search] regulation number with OR', default = False, dest = 'bool_rgl_num_or', action = 'store_true')
-parser.add_argument('--no-sr_rgl_num_OR', dest = 'bool_rgl_num_or', action = 'store_false')
+parser.add_argument('--no-sr_rgl_num_OR',help = '[Search] regulation number with AND', dest = 'bool_rgl_num_or', action = 'store_false')
 
 parser.add_argument('-sr_time_f', type = str, help = '[Search] decision time from, should be YYYYMMDD', default = None)
 parser.add_argument('-sr_time_t', type = str, help = '[Search] decision time to, should be YYYYMMDD', default = None)

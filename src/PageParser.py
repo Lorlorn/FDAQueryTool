@@ -30,6 +30,7 @@ keys = tuple([
     "Combination Product"
     ])
 
+#### Parent Class
 class PageParser:
     FDA_510K_CENTRAL_POSI = 3
 
@@ -108,29 +109,7 @@ class PageParser:
     def return_links(self):
         return self.links
 
-
-#### PDF Parser
-import PyPDF2
-import io
-
-class SummaryPDFReader:
-    def __init__(self):
-        self.reader = None
-    
-    def read_from_url(self, url:str):
-        r = requests.get(url)
-        f = io.BytesIO(r.content)
-        self.reader = PyPDF2.PdfFileReader(f)
-        del f
-
-    def key_exist(self, key:str)->bool:
-        for i in range(self.reader.getNumPages()):
-            page_text = ''.join(self.reader.getPage(i).extractText())
-            if key.lower() in page_text.lower():
-                return True
-        return False
-
-
+#### Unit Test Script
 if __name__ == "__main__":
     # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
     url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K091000'
@@ -145,4 +124,4 @@ if __name__ == "__main__":
     for k, v in p.element_dict.items():
         print(k, ': ', v)
     
-    print('Links: ', p.return_links())
+    print('Links: ', p.return_links()['summary'][0])
