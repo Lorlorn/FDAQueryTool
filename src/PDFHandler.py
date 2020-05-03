@@ -28,14 +28,42 @@ class ReportPDFReader:
         del f, r
         return self
 
-    def key_exist(self, key:str)->bool:
+    def key_exist(self, key:str, both = True)->bool:
         if (self.reader == None):
             return False
         for i in range(self.reader.getNumPages()):
             page_text = ''.join(self.reader.getPage(i).extractText())
-            if key.lower() in page_text.lower():
-                return True
+            if both:
+                if key.lower() in page_text.lower():
+                    return True
+            else:
+                if key in page_text:
+                    return True
+
         return False
+    
+    def key_extract(self, key:str)->list:
+        if (self.reader == None):
+            return []
+        matched_list = []
+        
+        for i in range(self.reader.getNumPages()):
+            page_text = ''.join(self.reader.getPage(i).extractText().replace('\n', ' '))
+            str_list = [s + '.' for s in page_text.split('.') if key in s]
+            matched_list += str_list
+        return matched_list
+
+    def key_extract_to_dict(self, key:str)->dict:
+        if (self.reader == None):
+            return {}
+        matched_dict = {}
+        
+        for i in range(self.reader.getNumPages()):
+            page_text = ''.join(self.reader.getPage(i).extractText().replace('\n', ' '))
+            str_list = [s + '.' for s in page_text.split('.') if key in s]
+            if len(str_list) != 0:
+                matched_dict[i] = str_list
+        return matched_dict
 
     def _save_from_pdf(self, file_name:str):
         writer = PyPDF2.PdfFileWriter()
@@ -78,5 +106,8 @@ if __name__ == '__main__':
         if (key == ''):
             break
         print('Is {} existed in pdf? {}'.format(key, test.key_exist(key)))
+        print('Matched sentences: ', test.key_extract(key)[:5])
 
-    print('File Saved:', test.save('.'))
+        for k, v in test.key_extract_to_dict(key).items():
+            print('Page {} : {}'.format(k, v))
+    # print('File Saved:', test.save('.'))
