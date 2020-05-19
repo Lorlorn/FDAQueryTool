@@ -80,11 +80,15 @@ class ReportPDFReader:
             f.write(r.content)
             f.close()
     
-    def save(self, dest:str)->bool:
+    def return_file_name(self):
+
+        return self._file_name.split('.pdf')[0]
+    
+    def save(self, dest:str, add_name = '')->bool:
         out_file = ''
         if (not os.path.isdir(dest)):
             dest = self._default_path
-        out_file = (dest + os.path.sep + self._file_name)
+        out_file = (dest + os.path.sep + add_name + self._file_name)
 
         if (self.reader != None):
             self._save_from_pdf(out_file)
@@ -105,9 +109,13 @@ if __name__ == '__main__':
         key = input('Enter search key (enter nothing to leave):')
         if (key == ''):
             break
-        print('Is {} existed in pdf? {}'.format(key, test.key_exist(key)))
-        print('Matched sentences: ', test.key_extract(key)[:5])
+        print('Is \"{}\" existed in pdf? {}'.format(key, test.key_exist(key)))
+        # print('Matched sentences: ', test.key_extract(key)[:5])
 
+        count = 0
         for k, v in test.key_extract_to_dict(key).items():
-            print('Page {} : {}'.format(k, v))
-    # print('File Saved:', test.save('.'))
+            print('Page {} : {}'.format(k, v[0]))
+            count += 1
+            if (count == 5):
+                break
+    print('File Saved:', test.save('.'))

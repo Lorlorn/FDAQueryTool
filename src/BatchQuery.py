@@ -258,19 +258,6 @@ class APIforDevice(APIAdaptor):
             print('Final Query: ', self._final_query)
         return self._final_query
 
-# #### 510(K) Query Masster
-# class DeviceQuery(APIforDevice):
-#     QUERY_DICT = {'search_dv_name_key': '', 'search_date_f': None, 'search_date_t': None, 'limit_num': None, 'sort_type': None}
-
-#     def __init__(self):
-#         self._final_query = ''
-#         self._connect_status = None
-#         self._content = None    
-    
-#     def set_query(self,  **kwargs):
-#         print(kwargs)
-#         pass
-
 
 #### Unit Test Script
 TEST_REQUEST = False
