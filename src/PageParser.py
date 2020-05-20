@@ -8,8 +8,8 @@ import requests
 from bs4 import BeautifulSoup as bs
 import re
 import os
-
 from PDFHandler import ReportPDFReader
+from utils.Utils import FilePathHandler
 
 #### Params
 keys = tuple([
@@ -45,6 +45,8 @@ class PageParser:
         self.central_table_keys = []
         self.element_dict = {}
         self.links = {}
+
+        # self.local_save_path = ''
     
     def get_url(self):
         # intialize status
@@ -111,16 +113,23 @@ class PageParser:
 
     def return_links(self):
         return self.links
-
-    def pdf_dealer(self, save_path = '.', search_key = '', save = True)->list:
-        msg = ''
-        mapped_dict = []
-
-        # check whether there are pdf files in links
+    
+    def return_pdf_links_dict(self):
         pdf_dict = {}
         for k, v in self.links.items():
             if ('pdf' in v[0]):
                 pdf_dict[k] = v[0]
+        return pdf_dict
+
+# This Function Should Be Carefully Refactor
+    def pdf_dealer(self, save_path = '.', search_key = '', save = True)->list:
+        
+        msg = ''
+        mapped_dict = []
+
+        # check whether there are pdf files in links
+        pdf_dict = self.return_pdf_links_dict()
+
         if not bool(pdf_dict):
             msg = 'No PDF file exists in any link.'
             print(msg)
@@ -131,30 +140,28 @@ class PageParser:
         check = False
         for k, v in pdf_dict.items():
             handler.read_from_url(v)
+            path_handler = FilePathHandler(save_path)
 
             # check if key in it
             if (search_key != ''):
                 check = handler.key_exist(search_key)
                 if check:
                     mapped_dict.append(k)
-                    for p, s in handler.key_extract_to_dict(search_key):
+                    for p, s in handler.key_extract_to_dict(search_key).items():
                         mapped_dict.append((p, s))
             if save:
-                save_path += (os.path.sep + handler.return_file_name() + '_Y' if check else '')
-                os.mkdir(save_path)
-                handler.save(save_path)
-        print(mapped_dict)
+                path_handler.curr_path = handler.return_file_name() + ('_Y' if check else '')
+                handler.save(path_handler.curr_path, add_name = k + ' ')
+            
         return mapped_dict
-
-
 
             
 #### Unit Test Script
 if __name__ == "__main__":
-    # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K130878'
-    url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K091000'
+    # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K200659'
+    # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K091000'
     # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K181373'
-    # url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/denovo.cfm?ID=DEN180044'
+    url = 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/denovo.cfm?ID=DEN180044'
 
     print('*'* 100)
 
@@ -164,5 +171,5 @@ if __name__ == "__main__":
     for k, v in p.element_dict.items():
         print(k, ': ', v)
     
-    print('Links: ', p.return_links()['summary'][0])
+    print('Links: ', p.return_links())
     p.pdf_dealer(search_key = 'AI')
