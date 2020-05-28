@@ -46,7 +46,7 @@ class TimeRange:
 
 #### Parent Class
 class APIAdaptor:
-    API_ROOT = 'https://api.fda.gov/'
+    API_BASE = 'https://api.fda.gov/'
     API_PARAMS = {'search', 'sort', 'count', 'limit', 'skip'}
     API_WARNINGS = ('Search not assigned', 'Limit not assigned', 'Sort not assigned')
     API_SYNTAX_KEYS = {'end_point_end': '.json?', 'param_asign': '=', 'mediator': ':', 'and': '&'}
@@ -159,19 +159,21 @@ class APIAdaptor:
 #### Children Classes
 ## 510K APIAdaptor
 class APIforDevice(APIAdaptor):
-    API_ROOT = APIAdaptor.API_ROOT + 'device/510k' + APIAdaptor.API_SYNTAX_KEYS['end_point_end']
+    API_BASE = APIAdaptor.API_BASE + 'device/510k' + APIAdaptor.API_SYNTAX_KEYS['end_point_end']
     API_SEARCH_FIELDS = {'openfda.regulation_number', 'fei_number', 'device_name', 'device_class', 'product_code', 'medical_specialty_description', 'registration_number', 'k_number'}
 
     def __init__(self):
-        self._final_query = self.API_ROOT
+        self._final_query = self.API_BASE
         self._query_dict = {}
+        self._search_complete = ''
 
     def add_search_device_name(self, name_key:str):
         if not ('search' in self._query_dict):
             self._query_dict['search'] = self.Search()
-            self._query_dict['search'].add_search('device_name', name_key)          
+            self._query_dict['search'].add_search('device_name', name_key)
         else:
             self._query_dict['search'].add_search('device_name', name_key)    
+        self._search_complete = name_key
         return self      
     
     def add_search_product_code(self, product_code_key:str, match:bool = True):
@@ -180,6 +182,7 @@ class APIforDevice(APIAdaptor):
             self._query_dict['search'].add_search('product_code', product_code_key)          
         else:
             self._query_dict['search'].add_search('product_code', product_code_key, match)
+        self._search_complete += ('-' + product_code_key)
         return self      
 
     def add_search_regulation_number(self, regulation_number_key:str, match:bool = True):
@@ -188,8 +191,9 @@ class APIforDevice(APIAdaptor):
             self._query_dict['search'].add_search('openfda.regulation_number', regulation_number_key)          
         else:
             self._query_dict['search'].add_search('openfda.regulation_number', regulation_number_key, match)
-        return self      
 
+        self._search_complete += ('-' + regulation_number_key)
+        return self      
 
     def add_search_decision_date_range(self, from_ = None, to_ = None):
         if not ('search' in self._query_dict):
@@ -197,6 +201,7 @@ class APIforDevice(APIAdaptor):
             self._query_dict['search'].add_time('decision_date', from_, to_)          
         else:
             self._query_dict['search'].add_time('decision_date', from_, to_)    
+        self._search_complete += TimeRange(from_, to_).range
         return self
 
     def add_limit(self, num = 20):
@@ -205,6 +210,7 @@ class APIforDevice(APIAdaptor):
             self._query_dict['limit'].set_limit_num(num)
         else:
             self._query_dict['limit'].set_limit_num(num)
+        
         return self
 
     def add_sort_by_decision_date(self, sort_type = 1):
@@ -257,7 +263,9 @@ class APIforDevice(APIAdaptor):
         if show:
             print('Final Query: ', self._final_query)
         return self._final_query
-
+    
+    def return_query_list(self):
+        return self._search_complete
 
 #### Unit Test Script
 TEST_REQUEST = False
@@ -277,7 +285,7 @@ if __name__ == '__main__':
         print(r.text)
     
     if TEST_CLASS:
-        print('ROOT is ', APIforDevice.API_ROOT)
+        print('ROOT is ', APIforDevice.API_BASE)
 
         #### 
         test = APIforDevice()
@@ -292,3 +300,4 @@ if __name__ == '__main__':
         s2 = test_2.return_final_query()
         print('S2 is ', s2)
         print(s1 == s2)
+        test_2.return_query_list()

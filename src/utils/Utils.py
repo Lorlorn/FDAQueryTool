@@ -25,6 +25,7 @@ class Timer(metaclass = Singleton):
     def clear(self):
         self._stop = None
 
+# FilePathHandler
 class FilePathHandler:
     DEFAULT_ROOT = '.'
 
@@ -43,7 +44,7 @@ class FilePathHandler:
 
     @property
     def curr_path(self):
-        return self._curr_path
+        return self._curr_path + os.path.sep
     
     @curr_path.setter
     def curr_path(self, folder_name = ''):

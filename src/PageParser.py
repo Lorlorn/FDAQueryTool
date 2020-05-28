@@ -8,8 +8,12 @@ import requests
 from bs4 import BeautifulSoup as bs
 import re
 import os
-from PDFHandler import ReportPDFReader
-from utils.Utils import FilePathHandler
+from sys import path as p
+p.insert(1, os.path.sep + 'utils')
+
+from src.PDFHandler import ReportPDFReader
+from src.utils.Utils import FilePathHandler
+
 
 #### Params
 keys = tuple([
@@ -154,7 +158,6 @@ class PageParser:
                 handler.save(path_handler.curr_path, add_name = k + ' ')
             
         return mapped_dict
-
             
 #### Unit Test Script
 if __name__ == "__main__":
@@ -172,4 +175,4 @@ if __name__ == "__main__":
         print(k, ': ', v)
     
     print('Links: ', p.return_links())
-    p.pdf_dealer(search_key = 'AI')
+    p.pdf_dealer(search_key = 'somekey')
