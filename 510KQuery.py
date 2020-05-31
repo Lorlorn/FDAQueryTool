@@ -56,6 +56,7 @@ class SingleQuery:
         # members
         self._set_process(0)
         self._args_dict = {}
+        self._error_url = []
         self._k_num_list = []
         self._quesy_list = ''
         self.path_handler = FilePathHandler()
@@ -65,7 +66,7 @@ class SingleQuery:
         self.path_handler.curr_path = datetime.now().strftime('%Y%m%d-%H%M%S')
 
     def _report(self):
-        self.interact.emit('{} Process'.format(self.STATUS))
+        self.interact.emit(' > ' * 8 + '{} Process'.format(self.STATUS))
 
     def _set_process(self, curr_proc):
         self.STATUS = self.PROCESS_LIST[curr_proc]
@@ -104,41 +105,43 @@ class SingleQuery:
 
 
     def ArgumentProcess(self):
+        self._set_process(1)
+
         # Deal input
         args = self.Args(self.ARGS)
         args.sr_key = self.interact.receive('Enter Search Device Name: ')
         args.sr_pd_code = self.interact.receive('Enter Search Product Code: ')
         if (args.sr_pd_code != ''): 
-             args.bool_pd_code_or = bool(self.interact.receive('Search With Or?'))
+             args.bool_pd_code_or = bool(self.interact.receive('Search With AND? Press "Enter" for AND, any other characters for OR: '))
         else:
             args.sr_pd_code = None
             args.bool_pd_code_or = None
         args.sr_rgl_num = self.interact.receive('Enter Regulation Number: ')
         if (args.sr_rgl_num != ''):
-            args.bool_rgl_num_or = bool(self.interact.receive('Search With Or?'))
+            args.bool_rgl_num_or = bool(self.interact.receive('Search With AND? Press "Enter" for AND, any other characters for OR: '))
         else:
             args.sr_rgl_num = None
             args.bool_rgl_num_or = None
-        args.sr_time_f = self.interact.receive('Enter Search Time (From): ')
-        args.sr_time_t = self.interact.receive('Enter Search Time (To)  : ')
-        args.l_num = self.interact.receive('Enter Files Numbers (Max. 200): ')
+        args.sr_time_f = self.interact.receive('Enter Search Time (From, YYYYMMDD. Press "Enter" using DEFAULT): ')
+        args.sr_time_t = self.interact.receive('Enter Search Time (To, YYYYMMDD. Press "Enter" using DEFAULT)  : ')
+        args.l_num = self.interact.receive('Enter Files Numbers (Max. 100. Press "Enter" using DEFAULT): ')
         try:
             val = int(args.l_num)
             if val > 200 or val < 1:
                 args.l_num = 20
-                self.interact.emit('Wrong Input, using default.')
+                self.interact.emit('Wrong Input, using DEFAULT.')
             else:
                 args.l_num = val
 
         except ValueError:
-            self.interact.emit('Wrong Input, using default.')
+            self.interact.emit('Wrong Input, using DEFAULT.')
             args.l_num = 20
 
-        args.srt_type = self.interact.receive('Enter Sort Type (1: Desc, 2 Asc): ')
+        args.srt_type = self.interact.receive('Enter Sort Type (1: Desc, 2 Asc. Press "Enter" using DEFAULT): ')
         try:
             val = int(args.srt_type)
             if val not in [1, 2]:
-                self.interact.emit('Wrong Input, using default.')
+                self.interact.emit('Wrong Input, using DEFAULT.')
                 args.srt_type = 1
             else:
                 args.srt_type = val
@@ -197,22 +200,27 @@ class SingleQuery:
         self._k_num_list = df['k_number'].to_list()
 
         # save database results?
-        save = input('Save database query results into CSV? (Y/N): ')
+        # save = self.interact.receive('Save database query results into CSV? (Y/N): ')
+        save = 'Y'
 
         if (save is 'Y') or (save is 'y'):
             file_name = self.path_handler.curr_path + '{}-database.csv'.format(self._quesy_list)
             df.to_csv(file_name)
-            self.interact.emit('Saved.')
+            self.interact.emit('Result Table Saved.')
         self.interact.emit('Overview:\n {}'.format(df.head()))
         del df
 
     def PageParsingProcess(self):
+        self._set_process(3)
+
+        # Read urls
         urls = [self.ROOT_URL.format(s) if s[0] == 'K' else self.DENOVO_URL.format(s) for s in self._k_num_list] 
-        pdf_search_key = input('Search Additional Key in PDF? Press "Enter" if none. ')
+        pdf_search_key = self.interact.receive('Search Additional Key in PDF? Press "Enter" if none. ')
 
         # Parsing each page
         dict_list = []
         for u in urls:
+            self._error_url.append(u)
             page_parser = PageParser.PageParser(u)
             page_parser.run()
 
@@ -220,27 +228,35 @@ class SingleQuery:
             key_dict = page_parser.pdf_dealer(self.path_handler.curr_path, pdf_search_key)
 
             dict_list.append(page_parser.element_dict)
-            self.interact.emit('Status: {} | | {} | Number of PDF: {} | Containing Key: {}'.format(
+            self.interact.emit('Status: {} | {} | Number of PDF: {} | Containing Key: {}'.format(
                 'OK' if (page_parser.get_url_data.status_code == 200) else 'Fail',
                 u,
                 len(page_parser.return_pdf_links_dict()),
                 'Yes' if len(key_dict) > 0 else 'No'))
+            self._error_url.pop()
 
         # save?
-        save = input('Save parsed results into CSV? (Y/N): ')
+        # save = self.interact.receive('Save parsed results into CSV? (Y/N): ')
+        save = 'Y'
         df = DataFrame(dict_list)
         
         if (save is 'Y') or (save is 'y'):
             file_name = self.path_handler.curr_path + '{}-parsed.csv'.format(self._quesy_list)
             df.to_csv(file_name)
-            self.interact.emit('Saved.')
+            self.interact.emit('Result Table Saved.')
         self.interact.emit('Overview: {}'.format(df.head()))
         del df
     
     def EndProcess(self):
         self.interact.emit('Bye bro.')
         exit()
-    
+
+    def ErrorProcess(self):
+        self._set_process(5)
+        with open(self.path_handler.curr_path + os.path.sep + 'Log.txt', 'w') as f:
+            for line in self._error_url:
+                f.write('Error at: ' + line)
+        self.interact.emit('Error At: {}'.format(self._error_url))
 
 if __name__ == '__main__':
 
@@ -251,9 +267,10 @@ if __name__ == '__main__':
             a.BatchQueryProcess()
             a.PageParsingProcess()
         except:
+            a.ErrorProcess()
             print('Encounter Unexpected Error. Please search again.')
             continue
 
-        if not bool(input('Continue? Press "Enter" to leave, "ok" to conitnue: ')):
+        if not bool(input('Continue? Press "Enter" to leave. Enter "OK" or random characters to conitnue: ')):
             a.EndProcess()
             break

@@ -31,15 +31,18 @@ class ReportPDFReader:
     def key_exist(self, key:str, both = True)->bool:
         if (self.reader == None):
             return False
-        for i in range(self.reader.getNumPages()):
-            page_text = ''.join(self.reader.getPage(i).extractText())
-            if both:
-                if key.lower() in page_text.lower():
-                    return True
-            else:
-                if key in page_text:
-                    return True
 
+        for i in range(self.reader.getNumPages()):
+            try:
+                page_text = ''.join(self.reader.getPage(i).extractText())
+                if both:
+                    if key.lower() in page_text.lower():
+                        return True
+                else:
+                    if key in page_text:
+                        return True
+            except TypeError:
+                continue
         return False
     
     def key_extract(self, key:str)->list:
@@ -48,9 +51,12 @@ class ReportPDFReader:
         matched_list = []
         
         for i in range(self.reader.getNumPages()):
-            page_text = ''.join(self.reader.getPage(i).extractText().replace('\n', ' '))
-            str_list = [s + '.' for s in page_text.split('.') if key in s]
-            matched_list += str_list
+            try:
+                page_text = ''.join(self.reader.getPage(i).extractText().replace('\n', ' '))
+                str_list = [s + '.' for s in page_text.split('.') if key in s]
+                matched_list += str_list
+            except TypeError:
+                continue
         return matched_list
 
     def key_extract_to_dict(self, key:str)->dict:
@@ -59,10 +65,13 @@ class ReportPDFReader:
         matched_dict = {}
         
         for i in range(self.reader.getNumPages()):
-            page_text = ''.join(self.reader.getPage(i).extractText().replace('\n', ' '))
-            str_list = [s + '.' for s in page_text.split('.') if key in s]
-            if len(str_list) != 0:
-                matched_dict[i] = str_list
+            try:
+                page_text = ''.join(self.reader.getPage(i).extractText().replace('\n', ' '))
+                str_list = [s + '.' for s in page_text.split('.') if key in s]
+                if len(str_list) != 0:
+                    matched_dict[i] = str_list
+            except TypeError:
+                continue
         return matched_dict
 
     def _save_from_pdf(self, file_name:str):
@@ -103,6 +112,7 @@ class ReportPDFReader:
 
 if __name__ == '__main__':
     url = 'https://www.accessdata.fda.gov/cdrh_docs/pdf19/K191323.pdf'
+    # url = 'https://www.accessdata.fda.gov/cdrh_docs/pdf/K992703.pdf'
     test = ReportPDFReader()
     test.read_from_url(url)
     while(True):
